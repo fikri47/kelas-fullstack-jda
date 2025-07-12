@@ -34,6 +34,7 @@ export default function RootLayout({
               <Link href="/" className="hover:underline">Home</Link>
               <Link href="/about" className="hover:underline">Tentang</Link>
               <Link href="/profile" className="hover:underline">Profil</Link>
+              <Link href="/products" className="hover:underline">Produk</Link>
             </div>
           </nav>
         </header>
