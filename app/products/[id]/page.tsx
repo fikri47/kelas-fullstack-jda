@@ -1,82 +1,78 @@
-import { notFound } from 'next/navigation';
-import Link from 'next/link';
-import Image from 'next/image';
+'use client';
+import { useEffect, useState } from 'react';
+import { useRouter } from 'next/navigation';
 
+export default function EditProduct({ params }: { params: { id: string } }) {
+  const [product, setProduct] = useState({ name: '', price: 0 });
+  const router = useRouter();
 
-const productDatabase = [
-  {
-    id: 1,
-    name: 'Terjemah Bulughul Maram A Hasan',
-    price: 100000,
-    desc: 'Buku ini membahas Pencapaian Tujuan Berdasarkan Dalil-dalil Hukum',
-    author: 'A. Hasan',
-    pages: 712,
-    cover: '/images/Bulughul.jpg'
-  }
-];
+  useEffect(() => {
+    const fetchProduct = async () => {
+      const res = await fetch(`/api/products`);
+      const products = await res.json();
+      const found = products.find((p: any) => p.id === Number(params.id));
+      if (found) setProduct(found);
+    };
+    fetchProduct();
+  }, [params.id]);
 
-export default async function ProductDetail({ params }: { params: { id: string } }) {
-  const product = productDatabase.find(p => p.id === Number(params.id));
-  
-  if (!product) return notFound();
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    const res = await fetch('/api/products', {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        id: Number(params.id),
+        ...product
+      })
+    });
+    
+    if (res.ok) router.push('/products');
+  };
 
   return (
     <div className="container mx-auto p-6">
-      <div className="max-w-4xl mx-auto bg-white rounded-lg shadow-md overflow-hidden">
-        <div className="md:flex">
-          <div className="md:w-1/3 bg-gray-100 p-6 flex items-center justify-center">
-            <div className="w-full h-64 bg-gray-300 rounded-lg">
-               {product.cover ? (
-                <Image
-                    src={product.cover}
-                    alt={product.name}
-                    width={300}
-                    height={400}
-                    className="w-full h-64 object-cover rounded-lg"
-                />
-                ) : (
-                <div className="flex items-center justify-center h-full text-gray-500">
-                <span>Tidak Ada Gambar</span>
-                </div>
-                )}
-            </div>
-          </div>
-          
-          <div className="md:w-2/3 p-6">
-            <h1 className="text-3xl font-bold text-green-800 mb-2">{product.name}</h1>
-            <p className="text-gray-600 mb-4">Oleh: {product.author}</p>
-            
-            <div className="bg-green-50 p-4 rounded-lg mb-6">
-              <p className="text-2xl font-bold text-green-800 mb-2">
-                Rp {product.price.toLocaleString()}
-              </p>
-              <p className="text-gray-700">{product.desc}</p>
-            </div>
-
-            <div className="grid grid-cols-2 gap-4 mb-6">
-              <div>
-                <h3 className="font-semibold text-gray-700">Halaman</h3>
-                <p>{product.pages} halaman</p>
-              </div>
-              <div>
-                <h3 className="font-semibold text-gray-700">Stok</h3>
-                <p>Tersedia</p>
-              </div>
-            </div>
-
-            <button className="w-full bg-green-800 text-white py-3 rounded-lg hover:bg-green-700 transition">
-              Tambah ke Keranjang
-            </button>
-          </div>
+      <h1 className="text-2xl font-bold mb-6">Edit Buku</h1>
+      
+      <form onSubmit={handleSubmit} className="max-w-md">
+        <div className="mb-4">
+          <label className="block mb-2">Nama Buku</label>
+          <input
+            type="text"
+            className="w-full p-2 border rounded"
+            value={product.name}
+            onChange={(e) => setProduct({...product, name: e.target.value})}
+            required
+          />
         </div>
-      </div>
-
-      <Link 
-        href="/products" 
-        className="inline-block mt-6 text-green-800 hover:underline"
-      >
-        &larr; Kembali ke Daftar Produk
-      </Link>
+        
+        <div className="mb-4">
+          <label className="block mb-2">Harga</label>
+          <input
+            type="number"
+            className="w-full p-2 border rounded"
+            value={product.price}
+            onChange={(e) => setProduct({...product, price: Number(e.target.value)})}
+            required
+          />
+        </div>
+        
+        <div className="flex gap-2">
+          <button
+            type="submit"
+            className="bg-green-600 text-white px-4 py-2 rounded"
+          >
+            Simpan
+          </button>
+          <button
+            type="button"
+            onClick={() => router.push('/products')}
+            className="bg-gray-500 text-white px-4 py-2 rounded"
+          >
+            Batal
+          </button>
+        </div>
+      </form>
     </div>
   );
 }
